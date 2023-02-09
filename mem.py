@@ -42,20 +42,23 @@ def json_decoder(output):
     return output_json
 
 def space_check(device, parsed_cmd, path, border_value):
-		devices = [item[0] for item in device.items()]
-		nglog.info("Devices where checks are done: " + str(devices))
-		for dev in devices:
-			nglog.info("################################################################")
-			nglog.info("Device: " + dev)
-			for item in parsed_cmd[dev]["show system internal flash"]["TABLE_flash"]["ROW_flash"]:
-				if item["Mounted-on"] == path:
-					used_space = int(item["Use-percent"])
-					if used_space >= int(border_value): 
-						nglog.info(item["Mounted-on"] + " | Used space: " + item["Use-percent"] + "%")
+        devices = [item[0] for item in device.items()]
+        nglog.info("Devices where checks are done: " + str(devices))
+        for dev in devices:
+            nglog.info("Device: " + dev)
+            for item in parsed_cmd[dev]["show system internal flash"]["TABLE_flash"]["ROW_flash"]:
+                if item["Mounted-on"] == path:
+                    used_space = int(item["Use-percent"])
+                    if used_space >= int(border_value): 
+                        nglog.info("### NOT OK ### - " + item["Mounted-on"] + " | Used space: " + item["Use-percent"] + "%\n")
+                    else:
+                        nglog.info("### OK ### - " + item["Mounted-on"] + " | Used space: " + item["Use-percent"] + "%\n")
+
 def get_commands(device : Device,*,path: str = "/bootflash",border_value: str = "5") -> None:
-	parsed_cmd = json_parser(["show system internal flash"],device)
-	if len(path) > 0:
-		space_check(device, parsed_cmd, path, border_value)
+    device = device.filter("name","(fx3-).+")
+    parsed_cmd = json_parser(["show system internal flash"],device)
+    if len(path) > 0:
+        space_check(device, parsed_cmd, path, border_value)
 	
 if __name__ == "__main__":
 	run_on_device_dict(get_commands)
